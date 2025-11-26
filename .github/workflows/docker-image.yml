@@ -12,14 +12,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Log in to Docker Hub
+      - name: Build Bitcoin backend + Blockbook
         run: |
           make all-bitcoin
 
-      # - name: Build image using Docker CLI
-      #   run: |
-      #     docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/my-image:latest .
+      - name: Show build directory
+        run: ls -l build
 
-      # - name: Push image
-      #   run: |
-      #     docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-image:latest
+      - name: Detect artifact filenames
+        id: find_files
+        run: |
+          BACKEND_DEB=$(ls build/backend-bitcoin*.deb | head -n 1)
+          BLOCKBOOK_DEB=$(ls build/blockbook-bitcoin*.deb | head -n 1)
+
+          echo "BACKEND_DEB=$BACKEND_DEB" >> $GITHUB_ENV
+          echo "BLOCKBOOK_DEB=$BLOCKBOOK_DEB" >> $GITHUB_ENV
+
+      - name: Upload artifacts (original filenames)
+        uses: actions/upload-artifact@v4
+        with:
+          name: blockbook-bitcoin-packages
+          path: |
+            ${{ env.BACKEND_DEB }}
+            ${{ env.BLOCKBOOK_DEB }}
